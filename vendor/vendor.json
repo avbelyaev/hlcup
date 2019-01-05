@@ -1,0 +1,43 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "P+kW7OzbpvzwpbOlgpGQcspKyqw=",
+			"path": "github.com/Sirupsen/logrus",
+			"revision": "eef6b768ab01a0598a0a6db97bad2a37d31df1d1",
+			"revisionTime": "2019-01-05T01:46:35Z"
+		},
+		{
+			"checksumSHA1": "r6ZMyP/HsdeToXIxvgP3ntL6Bds=",
+			"path": "github.com/konsorten/go-windows-terminal-sequences",
+			"revision": "5c8c8bd35d3832f5d134ae1e1e375b69a4d25242",
+			"revisionTime": "2018-10-04T22:41:46Z"
+		},
+		{
+			"checksumSHA1": "pUgy/wE07efcvwCVmvykj0/n2YA=",
+			"path": "github.com/pkg/errors",
+			"revision": "c9e70be2405e428f24bbc455d40d6b34543d5771",
+			"revisionTime": "2019-01-05T11:04:53Z"
+		},
+		{
+			"checksumSHA1": "BSPDVKviqHQaG2phOFN690zAKB8=",
+			"path": "golang.org/x/crypto/ssh/terminal",
+			"revision": "ff983b9c42bc9fbf91556e191cc8efb585c16908",
+			"revisionTime": "2018-07-25T11:53:45Z"
+		},
+		{
+			"checksumSHA1": "gbYx7c1TMUr2NDBdJ7dliB1ToVE=",
+			"path": "golang.org/x/sys/unix",
+			"revision": "badf5585203e739f88c2c6cd34188a6f54b5d619",
+			"revisionTime": "2019-01-05T16:29:23Z"
+		},
+		{
+			"checksumSHA1": "Y7nctMxT58lRM78VtElPerhcnEs=",
+			"path": "golang.org/x/sys/windows",
+			"revision": "badf5585203e739f88c2c6cd34188a6f54b5d619",
+			"revisionTime": "2019-01-05T16:29:23Z"
+		}
+	],
+	"rootPath": "hlcup"
+}
