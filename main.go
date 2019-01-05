@@ -2,7 +2,8 @@ package main
 
 import (
 	"net/http"
-	log "github.com/Sirupsen/logrus"
+	logger "github.com/Sirupsen/logrus"
+	"hlcup/domain"
 )
 
 //
@@ -10,9 +11,10 @@ import (
 //
 //}
 //
-//type Server struct {
-//	router *router
-//}
+type Server struct {
+	log   *logger.Logger
+	store map[int]domain.Account
+}
 //
 //func NewRouter() *router {
 //	return &router{
@@ -20,11 +22,12 @@ import (
 //	}
 //}
 //
-//func NewServer() *Server {
-//	return &Server{
-//		router: NewRouter(),
-//	}
-//}
+func NewServer() *Server {
+	return &Server{
+		log:   logger.New(),
+		store: make(map[int]domain.Account),
+	}
+}
 //
 //func (s *Server) serve() {
 //
@@ -32,8 +35,16 @@ import (
 
 
 func main() {
-	log.Info("starting")
+	var s = NewServer()
 
-	http.HandleFunc("/fuck", HandleFuck())
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	var err = s.loadInitialData()
+	if nil != err {
+		s.log.Fatal("Could not load initial data")
+		panic(err)
+	}
+
+	http.HandleFunc("/accounts/new", s.createAccount)
+
+	s.log.Info("starting dating service")
+	s.log.Fatal(http.ListenAndServe(":8080", nil))
 }
