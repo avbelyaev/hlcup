@@ -9,6 +9,24 @@
 			"revisionTime": "2019-01-05T01:46:35Z"
 		},
 		{
+			"checksumSHA1": "5gnBrB9ISzgkQe5rLOlFp2MqA/8=",
+			"path": "github.com/asaskevich/govalidator",
+			"revision": "f9ffefc3facfbe0caee3fea233cbb6e8208f4541",
+			"revisionTime": "2018-07-20T11:50:03Z"
+		},
+		{
+			"checksumSHA1": "ciubIc63PLO+sFwDbvafqiU/Rv4=",
+			"path": "github.com/go-ozzo/ozzo-validation",
+			"revision": "2f76ea62300c36e72bd56c804484cb6db53b69a5",
+			"revisionTime": "2018-11-16T12:45:51Z"
+		},
+		{
+			"checksumSHA1": "8Ls7UHsiyB0hGylIEjH+igDndOw=",
+			"path": "github.com/go-ozzo/ozzo-validation/is",
+			"revision": "2f76ea62300c36e72bd56c804484cb6db53b69a5",
+			"revisionTime": "2018-11-16T12:45:51Z"
+		},
+		{
 			"checksumSHA1": "r6ZMyP/HsdeToXIxvgP3ntL6Bds=",
 			"path": "github.com/konsorten/go-windows-terminal-sequences",
 			"revision": "5c8c8bd35d3832f5d134ae1e1e375b69a4d25242",

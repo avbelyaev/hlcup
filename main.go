@@ -44,6 +44,7 @@ func main() {
 	}
 
 	http.HandleFunc("/accounts/new", s.createAccount)
+	http.HandleFunc("/accounts/likes", s.addLikes)
 
 	s.log.Info("starting dating service")
 	s.log.Fatal(http.ListenAndServe(":8080", nil))
