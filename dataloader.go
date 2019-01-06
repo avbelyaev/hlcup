@@ -11,30 +11,28 @@ import (
 )
 
 const (
-	INITIAL_ZIP  = "resources/resources.zip"
-	INITIAL_JSON = "resources/example.json"
+	INITIAL_ZIP  = "data/data.zip"
+	INITIAL_JSON = "data/example.json"
 )
 
 func (s *Server) loadInitialData() error {
 	s.log.Info("loading initial data")
 
-	// prepare consumer for unzipped json
-	var consumer = func(data *os.File) error {
+	var consumer = func(data *os.File) {
 		// parse json
 		var initialAccounts domain.Accounts
 		var jsonParser = json.NewDecoder(data)
 		if err := jsonParser.Decode(&initialAccounts); nil != err {
-			return errors.Wrap(err, "init resources parsing error")
+			errors.Wrap(err, "init data parsing error")
 		}
 
 		// put into in-memory storage
 		for _, account := range initialAccounts.Accounts {
 			s.store[account.ID] = account
 		}
-		return nil
 	}
 
-	// unzip data and copying into memory
+	// unzip data by copying into memory
 	var err = unzip(INITIAL_ZIP, "/tmp", consumer)
 	if nil != err {
 		return errors.Wrap(err, "could not unzip "+INITIAL_ZIP)
@@ -44,7 +42,7 @@ func (s *Server) loadInitialData() error {
 	return nil
 }
 
-func unzip(src, dest string, fileConsumer func(jsonData *os.File) error) error {
+func unzip(src, dest string, fileConsumer func(jsonData *os.File)) error {
 	var r, err = zip.OpenReader(src)
 	if nil != err {
 		return errors.Wrap(err, "error opening zip reader")
@@ -55,7 +53,7 @@ func unzip(src, dest string, fileConsumer func(jsonData *os.File) error) error {
 		}
 	}()
 
-	_ = os.MkdirAll(dest, 0755)
+	os.MkdirAll(dest, 0755)
 
 	var extractAndWriteFile = func(f *zip.File) error {
 		var readCloser, err = f.Open()
@@ -71,7 +69,7 @@ func unzip(src, dest string, fileConsumer func(jsonData *os.File) error) error {
 		var path = filepath.Join(dest, f.Name)
 
 		{
-			_ = os.MkdirAll(filepath.Dir(path), f.Mode())
+			os.MkdirAll(filepath.Dir(path), f.Mode())
 			// set up permissions to access file
 			var f, err = os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
 			if nil != err {
@@ -89,10 +87,7 @@ func unzip(src, dest string, fileConsumer func(jsonData *os.File) error) error {
 			}
 
 			// apply consumer to fill in-memory repo
-			err = fileConsumer(f)
-			if nil != err {
-				return errors.Wrap(err, "file "+f.Name()+" cannot be consumed")
-			}
+			fileConsumer(f)
 		}
 		return nil
 	}
