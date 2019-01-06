@@ -1,38 +1,40 @@
 package main
 
 import (
-	"os"
-	"github.com/pkg/errors"
-	"encoding/json"
-	"hlcup/domain"
-	"path/filepath"
-	"io"
 	"archive/zip"
+	"encoding/json"
+	"github.com/pkg/errors"
+	"hlcup/domain"
+	"io"
+	"os"
+	"path/filepath"
 )
 
 const (
-	INITIAL_ZIP  = "data/data.zip"
-	INITIAL_JSON = "data/example.json"
+	INITIAL_ZIP  = "resources/resources.zip"
+	INITIAL_JSON = "resources/example.json"
 )
 
 func (s *Server) loadInitialData() error {
 	s.log.Info("loading initial data")
 
-	var consumer = func(data *os.File) {
+	// prepare consumer for unzipped json
+	var consumer = func(data *os.File) error {
 		// parse json
 		var initialAccounts domain.Accounts
 		var jsonParser = json.NewDecoder(data)
 		if err := jsonParser.Decode(&initialAccounts); nil != err {
-			errors.Wrap(err, "init data parsing error")
+			return errors.Wrap(err, "init resources parsing error")
 		}
 
 		// put into in-memory storage
 		for _, account := range initialAccounts.Accounts {
 			s.store[account.ID] = account
 		}
+		return nil
 	}
 
-	// unzip data by copying into memory
+	// unzip data and copying into memory
 	var err = unzip(INITIAL_ZIP, "/tmp", consumer)
 	if nil != err {
 		return errors.Wrap(err, "could not unzip "+INITIAL_ZIP)
@@ -42,7 +44,7 @@ func (s *Server) loadInitialData() error {
 	return nil
 }
 
-func unzip(src, dest string, fileConsumer func(jsonData *os.File)) error {
+func unzip(src, dest string, fileConsumer func(jsonData *os.File) error) error {
 	var r, err = zip.OpenReader(src)
 	if nil != err {
 		return errors.Wrap(err, "error opening zip reader")
@@ -53,7 +55,7 @@ func unzip(src, dest string, fileConsumer func(jsonData *os.File)) error {
 		}
 	}()
 
-	os.MkdirAll(dest, 0755)
+	_ = os.MkdirAll(dest, 0755)
 
 	var extractAndWriteFile = func(f *zip.File) error {
 		var readCloser, err = f.Open()
@@ -69,7 +71,7 @@ func unzip(src, dest string, fileConsumer func(jsonData *os.File)) error {
 		var path = filepath.Join(dest, f.Name)
 
 		{
-			os.MkdirAll(filepath.Dir(path), f.Mode())
+			_ = os.MkdirAll(filepath.Dir(path), f.Mode())
 			// set up permissions to access file
 			var f, err = os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
 			if nil != err {
@@ -87,7 +89,10 @@ func unzip(src, dest string, fileConsumer func(jsonData *os.File)) error {
 			}
 
 			// apply consumer to fill in-memory repo
-			fileConsumer(f)
+			err = fileConsumer(f)
+			if nil != err {
+				return errors.Wrap(err, "file "+f.Name()+" cannot be consumed")
+			}
 		}
 		return nil
 	}
