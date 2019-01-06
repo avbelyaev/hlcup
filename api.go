@@ -8,17 +8,16 @@ import (
 )
 
 func (s *Server) createAccount(writer http.ResponseWriter, request *http.Request) {
-	// check method
-	if http.MethodPost != request.Method {
-		badRequest(writer, nil)
+	// decode
+	var newAccount domain.Account
+	var err = decode(request, &newAccount)
+	if nil != err {
+		badRequest(writer, err)
 		return
 	}
 
-	var newAccount domain.Account
-	var decoder = json.NewDecoder(request.Body)
-
-	// decode
-	var err = decoder.Decode(&newAccount)
+	// validate
+	err = newAccount.Validate()
 	if nil != err {
 		badRequest(writer, err)
 		return
@@ -33,17 +32,9 @@ func (s *Server) createAccount(writer http.ResponseWriter, request *http.Request
 }
 
 func (s *Server) addLikes(writer http.ResponseWriter, request *http.Request) {
-	// check method
-	if http.MethodPost != request.Method {
-		badRequest(writer, nil)
-		return
-	}
-
-	var newLikes domain.Likes
-	var decoder = json.NewDecoder(request.Body)
-
 	// decode
-	var err = decoder.Decode(&newLikes)
+	var newLikes domain.Likes
+	var err = decode(request, &newLikes)
 	if nil != err {
 		badRequest(writer, err)
 		return
@@ -66,4 +57,12 @@ func badRequest(writer http.ResponseWriter, err error) {
 	log.WithError(err).Error("bad rq")
 	http.Error(writer, "go fck yourself", 400)
 	writer.Write(nil)
+}
+
+func decode(request *http.Request, container interface{}) error {
+	var decoder = json.NewDecoder(request.Body)
+	decoder.DisallowUnknownFields()
+
+	var err = decoder.Decode(container)
+	return err
 }
