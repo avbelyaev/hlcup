@@ -1,10 +1,10 @@
 package main
 
 import (
-	"net/http"
-	"hlcup/domain"
 	"encoding/json"
 	log "github.com/Sirupsen/logrus"
+	"hlcup/domain"
+	"net/http"
 )
 
 func (s *Server) createAccount(writer http.ResponseWriter, request *http.Request) {
@@ -28,7 +28,6 @@ func (s *Server) createAccount(writer http.ResponseWriter, request *http.Request
 
 	// rsp
 	writer.WriteHeader(201)
-	writer.Write(nil)
 }
 
 func (s *Server) addLikes(writer http.ResponseWriter, request *http.Request) {
@@ -50,19 +49,15 @@ func (s *Server) addLikes(writer http.ResponseWriter, request *http.Request) {
 
 	// rsp
 	writer.WriteHeader(202)
-	writer.Write(nil)
 }
 
 func badRequest(writer http.ResponseWriter, err error) {
 	log.WithError(err).Error("bad rq")
 	http.Error(writer, "go fck yourself", 400)
-	writer.Write(nil)
 }
 
 func decode(request *http.Request, container interface{}) error {
 	var decoder = json.NewDecoder(request.Body)
 	decoder.DisallowUnknownFields()
-
-	var err = decoder.Decode(container)
-	return err
+	return decoder.Decode(container)
 }

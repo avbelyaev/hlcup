@@ -1,9 +1,9 @@
 package domain
 
 import (
+	"errors"
 	v "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
-	"errors"
 	"time"
 )
 
@@ -42,11 +42,11 @@ type Account struct {
 	City    string `json:"city,omitempty"`    // optional
 
 	// dating-specific
-	Joined    int64          `json:"joined,omitempty"`
-	Status    string         `json:"status,omitempty"`
-	Interests []string       `json:"interests"`         // can be empty
-	Premium   AccountPremium `json:"premium,omitempty"` // optional
-	Likes     []AccountLike  `json:"likes"`             // can be empty
+	Joined    int64           `json:"joined,omitempty"`
+	Status    string          `json:"status,omitempty"`
+	Interests []string        `json:"interests"`         // can be empty
+	Premium   *AccountPremium `json:"premium,omitempty"` // optional
+	Likes     []AccountLike   `json:"likes"`             // can be empty
 }
 
 type AccountPremium struct {
@@ -86,8 +86,7 @@ func (a *Account) Validate() error {
 		v.Field(&a.Joined, v.Required, v.Max(JOINED_MAX_VALUE), v.Min(JOINED_MIN_VALUE)),
 		v.Field(&a.Status, v.Required, v.In("свободны", "заняты", "всё сложно")),
 		v.Field(&a.Interests, v.By(validateInterests)),
-		// TODO still cannot validate premium
-		//v.Field(&a.Premium, v.By(validatePremium)),
+		v.Field(&a.Premium, v.By(validatePremium)),
 		v.Field(&a.Likes, v.By(validateLikes)),
 	)
 }
@@ -103,14 +102,15 @@ func validateInterests(value interface{}) error {
 }
 
 func validatePremium(value interface{}) error {
-	var prem, ok = value.(AccountPremium)
-	if ok {
-		return v.ValidateStruct(&prem,
+	var prem = value.(*AccountPremium)
+	if nil != prem {
+		return v.ValidateStruct(prem,
 			v.Field(&prem.Start, v.Required, v.Min(PREMIUM_MIN_VALUE)),
 			v.Field(&prem.Finish, v.Required, v.Min(PREMIUM_MIN_VALUE)),
 		)
 	}
-	return errors.New("account.premium is null")
+	// account.premium can be null
+	return nil
 }
 
 func validateLikes(value interface{}) error {
