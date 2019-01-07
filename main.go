@@ -1,10 +1,11 @@
 package main
 
 import (
-	"net/http"
+	"fmt"
 	logger "github.com/Sirupsen/logrus"
-	"hlcup/domain"
 	"github.com/gorilla/mux"
+	"hlcup/domain"
+	"net/http"
 )
 
 type Server struct {
@@ -32,9 +33,10 @@ func main() {
 
 	var err = s.loadInitialData()
 	if nil != err {
-		s.log.Fatal("Could not load initial data. Terminating")
+		s.log.Fatal(fmt.Sprintf("could not load initial data: %+v", err))
 		panic(err)
 	}
+	s.log.Info(fmt.Sprintf("number of accounts loaded: %d", len(s.store)))
 
 	s.log.Info("starting dating service")
 	s.log.Fatal(http.ListenAndServe(":8080", nil))

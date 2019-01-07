@@ -3,9 +3,11 @@ package main
 import (
 	"archive/zip"
 	"encoding/json"
+	log "github.com/Sirupsen/logrus"
 	"github.com/pkg/errors"
 	"hlcup/domain"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -18,31 +20,60 @@ const (
 func (s *Server) loadInitialData() error {
 	s.log.Info("loading initial data")
 
-	var consumer = func(data *os.File) {
+	// unzip data into dir
+	var dest = "/tmp/hlcup"
+	var err = unzip(INITIAL_ZIP, dest)
+	if nil != err {
+		return errors.Wrap(err, "could not unzip "+INITIAL_ZIP)
+	}
+
+	// prepare consumer to save data into memory
+	var dataConsumer = func(data []byte) error {
 		// parse json
 		var initialAccounts domain.Accounts
-		var jsonParser = json.NewDecoder(data)
-		if err := jsonParser.Decode(&initialAccounts); nil != err {
-			errors.Wrap(err, "init data parsing error")
+		var err = json.Unmarshal(data, &initialAccounts)
+		if nil != err {
+			return errors.Wrap(err, "unmarshalling error")
 		}
 
 		// put into in-memory storage
 		for _, account := range initialAccounts.Accounts {
 			s.store[account.ID] = account
 		}
+		return nil
 	}
 
-	// unzip data by copying into memory
-	var err = unzip(INITIAL_ZIP, "/tmp", consumer)
+	// parse each unzipped file
+	err = readData(dest, dataConsumer)
 	if nil != err {
-		return errors.Wrap(err, "could not unzip "+INITIAL_ZIP)
+		return errors.Wrap(err, "cloud not read jsons from "+dest)
 	}
 
 	s.log.Info("initial data successfully loaded")
 	return nil
 }
 
-func unzip(src, dest string, fileConsumer func(jsonData *os.File)) error {
+func readData(path string, consumer func(data []byte) error) error {
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
+		return errors.New("could not read dir " + path)
+	}
+
+	for _, f := range files {
+		var fileContent, err = ioutil.ReadFile(path + "/" + f.Name())
+		if nil != err {
+			return errors.New("could not read file " + f.Name())
+		}
+
+		err = consumer(fileContent)
+		if nil != err {
+			log.Error("could not consume file " + f.Name() + ". Skipping")
+		}
+	}
+	return nil
+}
+
+func unzip(src, dest string) error {
 	var r, err = zip.OpenReader(src)
 	if nil != err {
 		return errors.Wrap(err, "error opening zip reader")
@@ -53,7 +84,7 @@ func unzip(src, dest string, fileConsumer func(jsonData *os.File)) error {
 		}
 	}()
 
-	os.MkdirAll(dest, 0755)
+	_ = os.MkdirAll(dest, 0755)
 
 	var extractAndWriteFile = func(f *zip.File) error {
 		var readCloser, err = f.Open()
@@ -69,7 +100,7 @@ func unzip(src, dest string, fileConsumer func(jsonData *os.File)) error {
 		var path = filepath.Join(dest, f.Name)
 
 		{
-			os.MkdirAll(filepath.Dir(path), f.Mode())
+			_ = os.MkdirAll(filepath.Dir(path), f.Mode())
 			// set up permissions to access file
 			var f, err = os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
 			if nil != err {
@@ -85,9 +116,6 @@ func unzip(src, dest string, fileConsumer func(jsonData *os.File)) error {
 			if nil != err {
 				return errors.Wrap(err, "error while copying "+f.Name())
 			}
-
-			// apply consumer to fill in-memory repo
-			fileConsumer(f)
 		}
 		return nil
 	}
