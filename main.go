@@ -23,7 +23,10 @@ func NewServer() *Server {
 func (s *Server) setupRouter() {
 	var r = mux.NewRouter()
 	r.HandleFunc("/accounts/new", s.createAccount).Methods("POST")
+	r.HandleFunc("/accounts/{id:[0-9]+}", s.updateAccount).Methods("POST")
+	r.HandleFunc("/accounts/{id:[0-9]+}", s.getAccount).Methods("GET")
 	r.HandleFunc("/accounts/likes", s.addLikes).Methods("POST")
+	r.HandleFunc("/accounts/filter", s.filterAccounts).Methods("GET")
 	http.Handle("/", r)
 }
 

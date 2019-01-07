@@ -38,7 +38,7 @@ func (s *Server) loadInitialData() error {
 
 		// put into in-memory storage
 		for _, account := range initialAccounts.Accounts {
-			s.store[account.ID] = account
+			s.store[*account.ID] = account
 		}
 		return nil
 	}

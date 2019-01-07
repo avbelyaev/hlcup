@@ -31,7 +31,7 @@ type Accounts struct {
 }
 
 type Account struct {
-	ID      int    `json:"id,omitempty"`
+	ID      *int   `json:"id,omitempty"`
 	Email   string `json:"email,omitempty"`
 	Fname   string `json:"fname,omitempty"` // optional
 	Sname   string `json:"sname,omitempty"` // optional
